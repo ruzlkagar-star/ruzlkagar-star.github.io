@@ -1,0 +1,978 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BlockShop — магазин игровых донатов | Донат для Minecraft, Roblox и CS2</title>
+<meta name="description" content="BlockShop — современный магазин игровых донатов. Корзина, избранное и история заказов сохраняются в браузере. Быстрая покупка, моментальная выдача.">
+<style>
+  :root{
+    --bg:#070b16;--bg-2:#0b1122;--surface:#101a33;--surface-2:#162342;
+    --border:rgba(148,163,255,.16);--text:#eef2ff;--muted:#8b96b8;
+    --accent:#6c8cff;--accent-2:#9b6cff;--grad:linear-gradient(120deg,#6c8cff,#9b6cff);
+    --grad-soft:linear-gradient(120deg,rgba(108,140,255,.16),rgba(155,108,255,.16));
+    --green:#38e08a;--amber:#ffb454;--pink:#ff6ca8;--danger:#ff5c7a;
+    --radius:18px;--shadow:0 20px 60px -20px rgba(4,10,30,.85);
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{scroll-behavior:smooth}
+  body{
+    font-family:"Segoe UI","Inter",system-ui,-apple-system,sans-serif;
+    background:
+      radial-gradient(900px 500px at 85% -10%,rgba(108,140,255,.14),transparent 60%),
+      radial-gradient(800px 500px at 0% 10%,rgba(155,108,255,.12),transparent 55%),
+      var(--bg);
+    color:var(--text);line-height:1.55;min-height:100vh;
+  }
+  ::selection{background:rgba(108,140,255,.4)}
+  a{color:inherit;text-decoration:none}
+  button{font-family:inherit;cursor:pointer;border:none;background:none;color:inherit}
+  input,select{font-family:inherit;color:inherit}
+  .wrap{max-width:1180px;margin:0 auto;padding:0 24px}
+  .hidden{display:none!important}
+
+  header{position:sticky;top:0;z-index:50;backdrop-filter:blur(14px);background:rgba(7,11,22,.72);border-bottom:1px solid var(--border)}
+  .nav{display:flex;align-items:center;gap:22px;height:66px}
+  .brand{display:flex;align-items:center;gap:11px;font-weight:800;font-size:19px;letter-spacing:.3px}
+  .logo{width:34px;height:34px;border-radius:10px;background:var(--grad);display:grid;place-items:center;box-shadow:0 8px 20px -6px rgba(108,140,255,.7)}
+  .logo svg{width:20px;height:20px}
+  .nav-links{display:flex;gap:22px;margin-left:auto;align-items:center}
+  .nav-links a{color:var(--muted);font-weight:600;font-size:14.5px;transition:color .2s}
+  .nav-links a:hover,.nav-links a.on{color:var(--text)}
+  .nav-actions{display:flex;gap:10px;align-items:center}
+  .icon-btn{position:relative;display:grid;place-items:center;width:40px;height:40px;border-radius:12px;background:var(--surface);border:1px solid var(--border);transition:.2s}
+  .icon-btn:hover{background:var(--surface-2)}
+  .icon-btn svg{width:19px;height:19px}
+  .icon-btn .badge{position:absolute;top:-6px;right:-6px;min-width:18px;height:18px;padding:0 4px;border-radius:18px;background:var(--pink);color:#fff;font-size:11px;font-weight:800;display:grid;place-items:center;transform:scale(0);transition:transform .2s}
+  .icon-btn .badge.show{transform:scale(1)}
+  .icon-btn .badge.fav{background:var(--amber)}
+  .menu-toggle{display:none;margin-left:auto}
+
+  .hero{position:relative;padding:78px 0 64px;overflow:hidden}
+  .hero-grid{position:absolute;inset:0;background-image:linear-gradient(rgba(108,140,255,.06) 1px,transparent 1px),linear-gradient(90deg,rgba(108,140,255,.06) 1px,transparent 1px);background-size:52px 52px;-webkit-mask-image:radial-gradient(700px 400px at 60% 40%,#000,transparent 75%);mask-image:radial-gradient(700px 400px at 60% 40%,#000,transparent 75%);pointer-events:none}
+  .hero-inner{position:relative;display:grid;grid-template-columns:1.1fr .9fr;gap:50px;align-items:center}
+  .pill{display:inline-flex;align-items:center;gap:8px;background:var(--grad-soft);border:1px solid var(--border);color:var(--accent);font-size:13px;font-weight:700;padding:7px 13px;border-radius:30px;margin-bottom:22px}
+  .pill .dot{width:7px;height:7px;border-radius:50%;background:var(--green);box-shadow:0 0 10px var(--green)}
+  .hero h1{font-size:clamp(34px,5vw,54px);line-height:1.08;font-weight:900;letter-spacing:-.5px}
+  .hero h1 .grad{background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent}
+  .hero p{color:var(--muted);font-size:17px;max-width:52ch;margin:20px 0 30px}
+  .hero-actions{display:flex;gap:14px;flex-wrap:wrap;align-items:center}
+  .btn{display:inline-flex;align-items:center;justify-content:center;gap:9px;padding:13px 24px;border-radius:13px;font-weight:700;font-size:15px;transition:transform .15s,box-shadow .2s,filter .2s}
+  .btn-primary{background:var(--grad);color:#fff;box-shadow:0 14px 34px -10px rgba(108,140,255,.8)}
+  .btn-primary:hover{transform:translateY(-2px);filter:brightness(1.06)}
+  .btn-ghost{background:var(--surface);border:1px solid var(--border);color:var(--text)}
+  .btn-ghost:hover{background:var(--surface-2)}
+  .btn-block{width:100%}
+  .hero-mini{display:flex;gap:22px;flex-wrap:wrap;margin-top:34px}
+  .mini{display:flex;align-items:center;gap:10px;color:var(--muted);font-size:13.5px;font-weight:600}
+  .mini svg{width:18px;height:18px;color:var(--green);flex-shrink:0}
+
+  .mock-wrap{position:relative}
+  .mock{background:linear-gradient(160deg,rgba(22,35,66,.9),rgba(11,17,34,.9));border:1px solid var(--border);border-radius:22px;padding:26px;box-shadow:var(--shadow);position:relative}
+  .mock-head{display:flex;align-items:center;gap:11px;border-bottom:1px solid var(--border);padding-bottom:16px;margin-bottom:18px}
+  .mock-head .logo{width:38px;height:38px;border-radius:11px}
+  .mock-name{font-weight:800;font-size:17px}
+  .mock-sub{font-size:12.5px;color:var(--muted)}
+  .mock-progress{margin-left:auto;background:var(--grad-soft);color:var(--accent);font-size:11.5px;font-weight:800;padding:5px 10px;border-radius:30px}
+  .mock-row{display:flex;justify-content:space-between;align-items:center;padding:12px 0;border-bottom:1px dashed var(--border)}
+  .mock-row:last-of-type{border-bottom:none}
+  .mock-label{color:var(--muted);font-size:14px;display:flex;align-items:center;gap:9px}
+  .mock-label svg{width:17px;height:17px;color:var(--accent)}
+  .mock-price{font-weight:800;font-size:16px}
+  .mock-total{display:flex;justify-content:space-between;align-items:center;margin-top:18px;background:var(--grad-soft);border:1px solid var(--border);padding:14px 16px;border-radius:14px;font-weight:900;font-size:17px}
+  .mock-float{position:absolute;right:-18px;top:-18px;background:var(--surface-2);border:1px solid var(--border);padding:10px 16px;border-radius:12px;font-size:13px;font-weight:800;box-shadow:var(--shadow);display:flex;align-items:center;gap:8px}
+  .mock-float svg{width:16px;height:16px;color:var(--green)}
+
+  .strip{border-top:1px solid var(--border);border-bottom:1px solid var(--border);background:rgba(255,255,255,.015)}
+  .strip-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;padding:26px 0}
+  .strip-item{display:flex;align-items:center;gap:14px}
+  .strip-icon{width:46px;height:46px;border-radius:13px;background:var(--grad-soft);border:1px solid var(--border);display:grid;place-items:center;flex-shrink:0}
+  .strip-icon svg{width:22px;height:22px;color:var(--accent)}
+  .strip-item strong{display:block;font-size:15px}
+  .strip-item span{font-size:13px;color:var(--muted)}
+
+  section{padding:72px 0}
+  .sec-head{max-width:640px;margin-bottom:34px}
+  .sec-head.center{margin-inline:auto;text-align:center}
+  .sec-head h2{font-size:clamp(26px,4vw,38px);font-weight:900;letter-spacing:-.4px;line-height:1.1}
+  .sec-head .sub{color:var(--muted);margin-top:12px;font-size:15.5px}
+  .sec-head .tag{display:inline-block;color:var(--accent);font-weight:800;font-size:13px;text-transform:uppercase;letter-spacing:1.5px;margin-bottom:12px}
+
+  .toolbar{display:flex;gap:14px;align-items:center;justify-content:space-between;flex-wrap:wrap;margin-bottom:24px}
+  .tabs{display:flex;gap:9px;flex-wrap:wrap}
+  .tab{background:var(--surface);border:1px solid var(--border);padding:9px 18px;border-radius:30px;font-weight:700;font-size:14px;color:var(--muted);display:flex;gap:8px;align-items:center;transition:.2s}
+  .tab:hover{color:var(--text)}
+  .tab.active{background:var(--grad);color:#fff;border-color:transparent}
+  .tab .count{font-size:12px;opacity:.8}
+  .search{position:relative}
+  .search svg{position:absolute;left:14px;top:50%;transform:translateY(-50%);width:17px;height:17px;color:var(--muted)}
+  .search input{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:11px 14px 11px 40px;width:230px;font-size:14px;outline:none;transition:.2s}
+  .search input:focus{border-color:var(--accent)}
+
+  .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:22px}
+  .card{background:linear-gradient(160deg,var(--surface-2),var(--surface));border:1px solid var(--border);border-radius:var(--radius);padding:24px;display:flex;flex-direction:column;position:relative;overflow:visible;transition:transform .2s,border-color .2s,box-shadow .2s}
+  .card:hover{transform:translateY(-5px);border-color:rgba(108,140,255,.45);box-shadow:var(--shadow)}
+  .card.alt{background:linear-gradient(160deg,rgba(155,108,255,.14),var(--surface))}
+  .card .fav{position:absolute;top:14px;right:14px;width:34px;height:34px;border-radius:10px;background:rgba(7,11,22,.5);border:1px solid var(--border);display:grid;place-items:center;z-index:2;transition:.2s}
+  .card .fav svg{width:17px;height:17px;color:var(--muted);transition:.2s}
+  .card .fav:hover{background:var(--surface-2)}
+  .card .fav.on svg{color:var(--danger);fill:var(--danger)}
+  .card .tag2{position:absolute;top:14px;left:14px;font-size:11.5px;font-weight:800;padding:5px 10px;border-radius:30px;text-transform:uppercase;letter-spacing:.5px}
+  .tag-hot{background:rgba(255,108,168,.18);color:var(--pink)}
+  .tag-top{background:rgba(255,180,84,.18);color:var(--amber)}
+  .tag-new{background:rgba(56,224,138,.16);color:var(--green)}
+  .card .icon{width:52px;height:52px;border-radius:14px;background:var(--grad-soft);display:grid;place-items:center;margin:14px 0 18px}
+  .card .icon svg{width:26px;height:26px;color:var(--accent)}
+  .card h3{font-size:18px;margin-bottom:8px}
+  .card p{color:var(--muted);font-size:14px;flex-grow:1}
+  .card .feat{margin:16px 0;display:flex;flex-direction:column;gap:7px}
+  .card .feat span{font-size:13px;color:var(--muted);display:flex;gap:8px;align-items:center}
+  .card .feat svg{width:15px;height:15px;color:var(--green);flex-shrink:0}
+  .card-foot{display:flex;align-items:center;justify-content:space-between;margin-top:6px;gap:12px}
+  .price{font-size:22px;font-weight:900}
+  .price small{font-size:13px;color:var(--muted);font-weight:600}
+  .add{background:var(--grad);color:#fff;font-weight:700;font-size:14px;padding:11px 18px;border-radius:12px;transition:transform .15s,box-shadow .2s}
+  .add:hover{transform:translateY(-2px);box-shadow:0 10px 24px -8px rgba(108,140,255,.8)}
+  .add.added{background:#16301f;color:var(--green);box-shadow:none}
+
+  .how{background:linear-gradient(180deg,rgba(255,255,255,.0),rgba(255,255,255,.02),rgba(255,255,255,.0))}
+  .steps{display:grid;grid-template-columns:repeat(4,1fr);gap:20px;counter-reset:step}
+  .step{position:relative;padding-top:48px}
+  .step::before{counter-increment:step;content:counter(step);position:absolute;top:0;left:0;width:36px;height:36px;border-radius:11px;background:var(--grad);color:#fff;font-weight:900;font-size:16px;display:grid;place-items:center;box-shadow:0 10px 24px -8px rgba(108,140,255,.8)}
+  .step h3{font-size:16.5px;margin-bottom:8px}
+  .step p{color:var(--muted);font-size:14px}
+
+  .game-row{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+  .game{display:flex;align-items:center;gap:15px;background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:16px;transition:.2s}
+  .game:hover{background:var(--surface-2);border-color:rgba(108,140,255,.4)}
+  .game .g-icon{width:46px;height:46px;border-radius:12px;display:grid;place-items:center;font-size:22px;flex-shrink:0}
+  .game strong{display:block;font-size:15.5px}
+  .game span{font-size:13px;color:var(--muted)}
+  .gi-mc{background:linear-gradient(135deg,#3b3450,#2a2640)}
+  .gi-roblox{background:linear-gradient(135deg,#38405c,#262b40)}
+  .gi-cs{background:linear-gradient(135deg,#3a3f4a,#282c35)}
+  .gi-ds{background:linear-gradient(135deg,#3c3a4a,#2a2838)}
+
+  .faq{max-width:780px;margin:0 auto}
+  .faq-item{border:1px solid var(--border);border-radius:14px;margin-bottom:12px;overflow:hidden;background:var(--surface)}
+  .faq-q{width:100%;display:flex;justify-content:space-between;align-items:center;gap:16px;padding:18px 20px;font-weight:700;font-size:15.5px;text-align:left}
+  .faq-q svg{width:19px;height:19px;flex-shrink:0;transition:transform .25s;color:var(--accent)}
+  .faq-item.open .faq-q svg{transform:rotate(45deg)}
+  .faq-a{max-height:0;overflow:hidden;transition:max-height .3s ease}
+  .faq-a p{padding:0 20px 18px;color:var(--muted);font-size:14.5px}
+
+  footer{border-top:1px solid var(--border);padding:44px 0 30px;background:rgba(255,255,255,.015)}
+  .foot-grid{display:flex;justify-content:space-between;gap:30px;flex-wrap:wrap;margin-bottom:30px}
+  .foot-brand p{color:var(--muted);font-size:14px;max-width:34ch;margin-top:14px}
+  .foot-cols{display:flex;gap:60px;flex-wrap:wrap}
+  .foot-cols h4{font-size:13px;text-transform:uppercase;letter-spacing:1px;color:var(--muted);margin-bottom:14px}
+  .foot-cols a{display:block;color:var(--text);font-size:14px;padding:5px 0;opacity:.85;transition:.2s}
+  .foot-cols a:hover{opacity:1;color:var(--accent)}
+  .foot-bottom{border-top:1px solid var(--border);padding-top:22px;display:flex;justify-content:space-between;gap:14px;flex-wrap:wrap;color:var(--muted);font-size:13px}
+
+  .overlay{position:fixed;inset:0;background:rgba(3,6,15,.6);backdrop-filter:blur(3px);opacity:0;pointer-events:none;transition:opacity .3s;z-index:90}
+  .overlay.show{opacity:1;pointer-events:auto}
+  .drawer{position:fixed;top:0;right:0;height:100vh;width:min(440px,100%);background:var(--bg-2);border-left:1px solid var(--border);transform:translateX(100%);transition:transform .35s cubic-bezier(.22,1,.36,1);z-index:100;display:flex;flex-direction:column}
+  .drawer.open{transform:translateX(0)}
+  .drawer-head{display:flex;align-items:center;justify-content:space-between;padding:20px 24px;border-bottom:1px solid var(--border)}
+  .drawer-head h3{font-size:18px}
+  .close{width:34px;height:34px;border-radius:10px;background:var(--surface);border:1px solid var(--border);display:grid;place-items:center;transition:.2s}
+  .close:hover{background:var(--surface-2)}
+  .close svg{width:17px;height:17px}
+  .cart-items{flex-grow:1;overflow-y:auto;padding:20px 24px}
+  .empty{text-align:center;color:var(--muted);padding:50px 10px}
+  .empty svg{width:52px;height:52px;opacity:.5;margin-bottom:14px}
+  .ci{display:flex;gap:14px;align-items:center;padding:14px 0;border-bottom:1px solid var(--border)}
+  .ci .c-icon{width:44px;height:44px;border-radius:12px;background:var(--grad-soft);display:grid;place-items:center;flex-shrink:0}
+  .ci .c-icon svg{width:22px;height:22px;color:var(--accent)}
+  .ci .c-mid{flex-grow:1}
+  .ci .c-name{font-weight:700;font-size:14.5px}
+  .ci .c-sub{font-size:12.5px;color:var(--muted)}
+  .ci .c-qty{display:flex;align-items:center;gap:9px;margin-top:6px}
+  .ci .c-qty button{width:24px;height:24px;border-radius:7px;background:var(--surface-2);border:1px solid var(--border);font-weight:800;display:grid;place-items:center;font-size:15px;transition:.15s}
+  .ci .c-qty button:hover{background:var(--accent);color:#fff}
+  .ci .c-qty .q{font-weight:800;min-width:16px;text-align:center}
+  .ci .c-price{font-weight:800;font-size:14.5px}
+  .ci .c-del{color:var(--muted);opacity:.7;transition:.2s}
+  .ci .c-del:hover{color:var(--pink);opacity:1}
+  .ci .c-del svg{width:17px;height:17px}
+  .drawer-foot{border-top:1px solid var(--border);padding:20px 24px 24px;background:var(--bg-2)}
+  .total-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px}
+  .total-row .val{font-size:24px;font-weight:900}
+  .checkout{width:100%;padding:15px;border-radius:13px;background:var(--grad);color:#fff;font-size:16px;font-weight:800;box-shadow:0 14px 34px -10px rgba(108,140,255,.8);transition:.2s}
+  .checkout:hover{transform:translateY(-2px);filter:brightness(1.06)}
+  .checkout:disabled{opacity:.55;cursor:not-allowed;transform:none;box-shadow:none}
+  .hint{font-size:12px;color:var(--muted);text-align:center;margin-top:12px}
+  .clear-cart{width:100%;margin-top:10px;padding:10px;border-radius:11px;border:1px solid var(--border);color:var(--muted);font-size:13px;font-weight:600;transition:.2s}
+  .clear-cart:hover{border-color:var(--danger);color:var(--danger)}
+
+  .toast{position:fixed;bottom:26px;left:50%;transform:translate(-50%,80px);z-index:120;background:var(--surface-2);border:1px solid var(--border);border-radius:12px;padding:13px 20px;font-weight:700;font-size:14px;box-shadow:var(--shadow);display:flex;gap:10px;align-items:center;opacity:0;transition:.35s cubic-bezier(.22,1,.36,1);max-width:92vw}
+  .toast.show{transform:translate(-50%,0);opacity:1}
+  .toast svg{width:18px;height:18px;color:var(--green);flex-shrink:0}
+
+  .modal{position:fixed;inset:0;z-index:110;display:none;place-items:center;padding:20px}
+  .modal.show{display:grid}
+  .modal-box{background:var(--bg-2);border:1px solid var(--border);border-radius:20px;width:min(520px,100%);max-height:88vh;overflow-y:auto;box-shadow:var(--shadow)}
+  .modal-box.pad{padding:36px 32px}
+  .modal-box .ok{width:64px;height:64px;border-radius:50%;background:rgba(56,224,138,.14);display:grid;place-items:center;margin:0 auto 18px}
+  .modal-box .ok svg{width:32px;height:32px;color:var(--green)}
+  .modal-box h3{font-size:22px;margin-bottom:8px}
+  .modal-box p{color:var(--muted);font-size:14.5px;margin-bottom:22px}
+  .modal-box .btn{width:100%}
+  .modal-body{padding:26px 28px}
+  .modal-foot{display:flex;gap:12px;padding:0 28px 28px}
+  .modal-foot .btn{flex:1}
+
+  .field{display:flex;flex-direction:column;gap:8px;margin-bottom:16px;text-align:left}
+  .field label{font-size:13.5px;font-weight:700;color:var(--muted)}
+  .field input,.field select,.field textarea{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:12px 14px;font-size:15px;outline:none;transition:.2s;width:100%}
+  .field input:focus,.field select:focus,.field textarea:focus{border-color:var(--accent);background:var(--surface-2)}
+  .field .err{color:var(--danger);font-size:12.5px;display:none}
+  .field.invalid input{border-color:var(--danger)}
+  .field.invalid .err{display:block}
+  .field-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  .summary{background:var(--grad-soft);border:1px solid var(--border);border-radius:14px;padding:16px;margin-bottom:18px}
+  .summary-row{display:flex;justify-content:space-between;padding:6px 0;font-size:14px;color:var(--muted)}
+  .summary-row.total{color:var(--text);font-weight:800;font-size:16px;border-top:1px dashed var(--border);margin-top:8px;padding-top:10px}
+
+  .orders-list{display:flex;flex-direction:column;gap:14px}
+  .order{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:18px 20px;display:flex;gap:16px;align-items:center;flex-wrap:wrap}
+  .order .o-id{font-size:13px;color:var(--muted);font-weight:700;min-width:110px}
+  .order .o-meta{flex-grow:1;min-width:180px}
+  .order .o-date{font-size:12.5px;color:var(--muted)}
+  .order .o-items{font-size:13.5px;margin-top:3px}
+  .order .o-total{font-weight:900;font-size:17px}
+  .st{font-size:12px;font-weight:800;padding:6px 12px;border-radius:30px}
+  .st-wait{background:rgba(255,180,84,.15);color:var(--amber)}
+  .st-done{background:rgba(56,224,138,.14);color:var(--green)}
+  .st-cancel{background:rgba(255,92,122,.14);color:var(--danger)}
+
+  .reveal{opacity:0;transform:translateY(26px);transition:opacity .6s ease,transform .6s ease}
+  .reveal.in{opacity:1;transform:none}
+
+  @media(max-width:960px){
+    .hero-inner{grid-template-columns:1fr}
+    .mock-wrap{max-width:460px}
+    .grid{grid-template-columns:repeat(2,1fr)}
+    .strip-grid{grid-template-columns:repeat(2,1fr);gap:20px}
+    .steps{grid-template-columns:repeat(2,1fr);gap:28px}
+    .game-row{grid-template-columns:repeat(2,1fr)}
+  }
+  @media(max-width:640px){
+    .nav-links{display:none;position:absolute;top:66px;left:0;right:0;background:var(--bg-2);border-bottom:1px solid var(--border);flex-direction:column;padding:14px 24px;gap:6px}
+    .nav-links.open{display:flex}
+    .nav-links a{padding:11px 0}
+    .menu-toggle{display:grid}
+    .grid{grid-template-columns:1fr}
+    .steps{grid-template-columns:1fr}
+    .game-row{grid-template-columns:1fr}
+    section{padding:56px 0}
+    .mock-float{position:static;margin-top:14px}
+    .search input{width:100%}
+    .toolbar{flex-direction:column;align-items:stretch}
+    .field-row{grid-template-columns:1fr}
+  }
+  @keyframes floaty{0%,100%{transform:translateY(0)}50%{transform:translateY(-10px)}}
+  .floaty{animation:floaty 5s ease-in-out infinite}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="wrap nav">
+    <a href="#top" class="brand" aria-label="BlockShop">
+      <span class="logo"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2 L3 7 v10 l9 5 9-5 V7 Z"/><path d="M3 7 l9 5 9-5 M12 22 V12"/></svg></span>
+      Block<span style="color:var(--accent)">Shop</span>
+    </a>
+    <nav class="nav-links" id="navLinks" aria-label="Основная навигация">
+      <a href="#catalog">Каталог</a>
+      <a href="#games">Игры</a>
+      <a href="#how">Как это работает</a>
+      <a href="#orders" id="navOrders">Мои заказы</a>
+      <a href="#faq">FAQ</a>
+    </nav>
+    <button class="menu-toggle icon-btn" id="menuToggle" aria-label="Меню" aria-expanded="false">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+    </button>
+    <div class="nav-actions">
+      <button class="icon-btn" id="openFav" aria-label="Избранное" title="Избранное">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.6l-1-1a5.5 5.5 0 0 0-7.8 7.8l1 1L12 21.2l7.8-7.8 1-1a5.5 5.5 0 0 0 0-7.8z"/></svg>
+        <span class="badge fav" id="favBadge">0</span>
+      </button>
+      <button class="icon-btn" id="openCart" aria-label="Корзина" title="Корзина">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
+        <span class="badge" id="cartBadge">0</span>
+      </button>
+    </div>
+  </div>
+</header>
+
+<section class="hero" id="top">
+  <div class="hero-grid"></div>
+  <div class="wrap hero-inner">
+    <div>
+      <span class="pill"><span class="dot"></span>Выдача за 30 секунд · 24/7</span>
+      <h1>Прокачай игру.<br><span class="grad">Получи донат мгновенно.</span></h1>
+      <p>BlockShop — это простой и быстрый магазин внутриигровых привилегий. Выбирай пакет, оформляй заказ и получай товар прямо в игре. Корзина, избранное и история заказов сохраняются в твоём браузере.</p>
+      <div class="hero-actions">
+        <a href="#catalog" class="btn btn-primary">Выбрать донат
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+        </a>
+        <button class="btn btn-ghost" id="btnOrders">Мои заказы</button>
+      </div>
+      <div class="hero-mini">
+        <span class="mini"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><path d="M22 4 12 14l-3-3"/></svg>Всё сохраняется</span>
+        <span class="mini"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="4" width="22" height="16" rx="2"/><path d="M1 10h22"/></svg>Простое оформление</span>
+        <span class="mini"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>Статус заказа в истории</span>
+      </div>
+    </div>
+    <div class="mock-wrap">
+      <div class="mock floaty">
+        <div class="mock-head">
+          <span class="logo"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2"><path d="M12 2 L3 7 v10 l9 5 9-5 V7 Z"/></svg></span>
+          <div><div class="mock-name">VIP Прохождение</div><div class="mock-sub">Minecraft · сервер SkyBlock</div></div>
+          <span class="mock-progress">Оформлен</span>
+        </div>
+        <div class="mock-row"><span class="mock-label"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 12V8H6a2 2 0 0 1 0-4h2"/><path d="M4 6v12a2 2 0 0 0 2 2h14v-4"/><path d="M18 12a2 2 0 0 0 0 4h4v-4Z"/></svg>Монеты</span><span class="mock-price">+15 000</span></div>
+        <div class="mock-row"><span class="mock-label"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>Кит «Королевский»</span><span class="mock-price">активен</span></div>
+        <div class="mock-total"><span>Заказ №0412</span><span>299 ₽</span></div>
+      </div>
+      <div class="mock-float"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><path d="M22 4 12 14l-3-3"/></svg>Всё хранится у тебя</div>
+    </div>
+  </div>
+</section>
+
+<div class="strip">
+  <div class="wrap strip-grid">
+    <div class="strip-item"><span class="strip-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2 3 14h9l-1 8 10-12h-9l1-8z"/></svg></span><div><strong>Мгновенно</strong><span>выдача за ~30 сек</span></div></div>
+    <div class="strip-item"><span class="strip-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></span><div><strong>Безопасно</strong><span>заказ у тебя в истории</span></div></div>
+    <div class="strip-item"><span class="strip-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></span><div><strong>Поддержка 24/7</strong><span>поможем в любом вопросе</span></div></div>
+    <div class="strip-item"><span class="strip-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg></span><div><strong>Избранное и история</strong><span>ничего не теряется</span></div></div>
+  </div>
+</div>
+
+<section id="catalog">
+  <div class="wrap">
+    <div class="sec-head reveal">
+      <span class="tag">Каталог</span>
+      <h2>Привилегии для любой игры</h2>
+      <p class="sub">Выбери пакет, добавь в корзину или в избранное. Поиск и фильтры помогут найти нужное быстрее.</p>
+    </div>
+    <div class="toolbar reveal">
+      <div class="tabs" id="tabs" role="tablist">
+        <button class="tab active" data-cat="all">Все <span class="count" id="cAll"></span></button>
+        <button class="tab" data-cat="mc">Minecraft <span class="count" id="cMc"></span></button>
+        <button class="tab" data-cat="roblox">Roblox <span class="count" id="cRoblox"></span></button>
+        <button class="tab" data-cat="cs">CS2 <span class="count" id="cCs"></span></button>
+        <button class="tab" data-cat="vip">VIP <span class="count" id="cVip"></span></button>
+      </div>
+      <div class="search">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+        <input type="search" id="searchInput" placeholder="Поиск, например «VIP»…" aria-label="Поиск по каталогу">
+      </div>
+    </div>
+    <div class="grid" id="grid"></div>
+  </div>
+</section>
+
+<section class="how" id="how">
+  <div class="wrap">
+    <div class="sec-head center reveal">
+      <span class="tag">Просто и понятно</span>
+      <h2>Как это работает</h2>
+      <p class="sub">Четыре шага — и бонусы уже в игре.</p>
+    </div>
+    <div class="steps reveal">
+      <div class="step"><h3>Выбирай пакет</h3><p>Открой каталог, найди привилегию и добавь в корзину или избранное.</p></div>
+      <div class="step"><h3>Оформи заказ</h3><p>Укажи ник, сервер и подтверди заказ — он появится в разделе «Мои заказы».</p></div>
+      <div class="step"><h3>Оплати</h3><p>Перейди к реальной оплате — на этом демо-сайте она не выполняется.</p></div>
+      <div class="step"><h3>Получай в игре</h3><p>После оплаты донат придёт автоматически почти сразу.</p></div>
+    </div>
+  </div>
+</section>
+
+<section id="games" class="how">
+  <div class="wrap">
+    <div class="sec-head reveal">
+      <span class="tag">Игры и серверы</span>
+      <h2>Где можно использовать</h2>
+      <p class="sub">Пакеты привязаны к нику или серверу при оформлении заказа.</p>
+    </div>
+    <div class="game-row reveal">
+      <a href="#catalog" class="game"><span class="g-icon gi-mc">⛏️</span><div><strong>Minecraft</strong><span>Привилегии, монеты, киты</span></div></a>
+      <a href="#catalog" class="game"><span class="g-icon gi-roblox">🎮</span><div><strong>Roblox</strong><span>Robux и игровые пропуска</span></div></a>
+      <a href="#catalog" class="game"><span class="g-icon gi-cs">🔫</span><div><strong>CS2</strong><span>Наборы скинов и кейсы</span></div></a>
+      <a href="#catalog" class="game"><span class="g-icon gi-ds">🎲</span><div><strong>Discord</strong><span>Усиленные боты и роли</span></div></a>
+    </div>
+  </div>
+</section>
+
+<section id="orders" class="how">
+  <div class="wrap">
+    <div class="sec-head reveal">
+      <span class="tag">Мои заказы</span>
+      <h2>История заказов</h2>
+      <p class="sub">Заказы сохраняются в этом браузере. После добавления реальной оплаты здесь будет виден каждый заказ и его статус.</p>
+    </div>
+    <div class="reveal" id="ordersWrap"></div>
+  </div>
+</section>
+
+<section id="faq" class="how">
+  <div class="wrap">
+    <div class="sec-head center reveal">
+      <span class="tag">FAQ</span>
+      <h2>Частые вопросы</h2>
+    </div>
+    <div class="faq reveal">
+      <div class="faq-item">
+        <button class="faq-q">Как быстро приходит донат?<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></button>
+        <div class="faq-a"><p>Обычно привилегия выдаётся автоматически в течение 30 секунд после оплаты. Если вы пользуетесь офлайн-сервером — зайдите в игру через 1–2 минуты.</p></div>
+      </div>
+      <div class="faq-item">
+        <button class="faq-q">Заказы сохраняются между перезагрузками?<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></button>
+        <div class="faq-a"><p>Да. Корзина, избранное и история заказов хранятся в localStorage вашего браузера. Но это локально для устройства — если вы зайдёте с другого браузера, данные не перенесутся автоматически.</p></div>
+      </div>
+      <div class="faq-item">
+        <button class="faq-q">Что если донат не пришёл?<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></button>
+        <div class="faq-a"><p>Напишите в поддержку — мы работаем 24/7. Номер вашего заказа виден в разделе «Мои заказы», так что показать покупку легко.</p></div>
+      </div>
+      <div class="faq-item">
+        <button class="faq-q">Это рабочий магазин?<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></button>
+        <div class="faq-a"><p>Пока это демо: все функции сайта работают, заказы создаются и сохраняются, но реальная оплата не выполняется. Чтобы принимать деньги, нужно подключить платёжный шлюз и бэкенд.</p></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <div class="foot-grid">
+      <div class="foot-brand">
+        <a href="#top" class="brand"><span class="logo"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2"><path d="M12 2 L3 7 v10 l9 5 9-5 V7 Z"/></svg></span>Block<span style="color:var(--accent)">Shop</span></a>
+        <p>Простой и быстрый магазин игровых донатов. Мгновенная выдача и честные цены.</p>
+      </div>
+      <div class="foot-cols">
+        <div><h4>Магазин</h4><a href="#catalog">Каталог</a><a href="#orders">Мои заказы</a><a href="#games">Игры</a></div>
+        <div><h4>Помощь</h4><a href="#faq">FAQ</a><a href="#how">Как купить</a></div>
+        <div><h4>Документы</h4><a href="#" onclick="return false">Пользовательское соглашение</a><a href="#" onclick="return false">Политика конфиденциальности</a><a href="#" onclick="return false">Оферта</a></div>
+      </div>
+    </div>
+    <div class="foot-bottom">
+      <span>© <span id="year"></span> BlockShop. Игровой донат и привилегии.</span>
+      <span>Демо-сайт · все данные хранятся в браузере</span>
+    </div>
+  </div>
+</footer>
+
+<!-- Cart drawer -->
+<div class="overlay" id="overlay"></div>
+<aside class="drawer" id="drawer" aria-label="Корзина">
+  <div class="drawer-head">
+    <h3 id="drawerTitle">Ваша корзина</h3>
+    <button class="close" id="closeDrawer" aria-label="Закрыть"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
+  </div>
+  <div class="cart-items" id="drawerItems"></div>
+  <div class="drawer-foot" id="drawerFoot">
+    <div class="total-row"><span style="color:var(--muted)">Итого</span><span class="val" id="drawerTotal">0 ₽</span></div>
+    <button class="checkout" id="checkoutBtn" disabled>Оформить заказ</button>
+    <button class="clear-cart" id="clearCart" style="display:none">Очистить корзину</button>
+    <p class="hint">Оформление создаёт заказ без оплаты (демо)</p>
+  </div>
+</aside>
+
+<!-- Checkout modal -->
+<div class="modal" id="modal">
+  <div class="modal-box pad">
+    <div id="checkoutForm">
+      <div style="text-align:center;margin-bottom:20px">
+        <div class="ok" style="background:var(--grad-soft)"><svg viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg></div>
+        <h3>Оформление заказа</h3>
+        <p style="margin-bottom:0;font-size:13.5px">Заполни данные — заказ появится в «Мои заказы». Оплата не производится (демо).</p>
+      </div>
+      <div class="summary" id="checkoutSummary"></div>
+      <div class="field">
+        <label for="fNick">Ваш ник в игре</label>
+        <input type="text" id="fNick" placeholder="Например: Steeve2010" autocomplete="nickname">
+        <span class="err">Введи ник (минимум 2 символа)</span>
+      </div>
+      <div class="field">
+        <label for="fServer">Сервер / игра</label>
+        <input type="text" id="fServer" placeholder="Например: SkyBlock" autocomplete="off">
+        <span class="err">Укажи сервер или игру</span>
+      </div>
+      <div class="field">
+        <label for="fEmail">Email (для чека)</label>
+        <input type="email" id="fEmail" placeholder="you@example.com" autocomplete="email">
+        <span class="err">Введи корректный email</span>
+      </div>
+      <label style="display:flex;gap:10px;align-items:flex-start;color:var(--muted);font-size:13.5px;margin-bottom:20px;cursor:pointer">
+        <input type="checkbox" id="fAgree" style="margin-top:3px;width:16px;height:16px;accent-color:var(--accent)">
+        Соглашаюсь с условиями и понимаю, что это демо-сайт без реальной оплаты
+      </label>
+      <button class="btn btn-primary btn-block" id="confirmOrder">Подтвердить заказ</button>
+    </div>
+    <div id="orderDone" class="hidden" style="text-align:center">
+      <div class="ok"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></div>
+      <h3>Заказ оформлен!</h3>
+      <p>Номер вашего заказа — <strong id="doneId" style="color:var(--accent)"></strong>. Он сохранён в разделе «Мои заказы» этого браузера.</p>
+      <button class="btn btn-primary" id="doneBtn">Отлично</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+(function(){
+  "use strict";
+
+  var PASSIVE = { passive:true };
+
+  var CAT_DEFS = {
+    mc:{label:"Minecraft", color:"#6c8cff", icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2 L3 7 v10 l9 5 9-5 V7 Z"/><path d="M3 7 l9 5 9-5 M12 22 V12"/></svg>'},
+    roblox:{label:"Roblox", color:"#9b6cff", icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="16" height="16" rx="4"/><path d="M8 15V9l3 5 3-5v6"/></svg>'},
+    cs:{label:"CS2", color:"#ffb454", icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l9 5-9 5-9-5 9-5z"/><path d="M3 13l9 5 9-5"/></svg>'},
+    vip:{label:"VIP", color:"#38e08a", icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>'}
+  };
+
+  var PACKAGES = [
+    {id:"mc-vip", cat:"mc", badge:"hot", badgeT:"Хит", name:"VIP", price:299, period:"30 дней",
+     feat:["Кит «Королевский»","Приватные команды","Жёлтый префикс"],
+     desc:"Первый шаг к прокачке — монеты, киты и команды."},
+    {id:"mc-premium", cat:"mc", badge:"top", badgeT:"Топ", name:"Premium", price:549, period:"30 дней",
+     feat:["Все бонусы VIP","Кит «Император»","2 настройки дома"],
+     desc:"Больше монет, комплектов и серьёзный префикс."},
+    {id:"mc-duke", cat:"mc", badge:"new", badgeT:"Новинка", name:"Duke", price:899, period:"Навсегда",
+     feat:["Все бонусы Premium","Кит «Легенда»","5 настроек дома"],
+     desc:"Постоянная привилегия с максимальным комплектом."},
+    {id:"rb-robux-1", cat:"roblox", name:"Robux 1000", price:299, period:"Моментально",
+     feat:["1000 Robux","Выдача на аккаунт","Работает с пропусками"],
+     desc:"Быстрая доставка Robux прямо на ваш аккаунт."},
+    {id:"rb-robux-2", cat:"roblox", badge:"hot", badgeT:"Хит", name:"Robux 2500", price:649, period:"Моментально",
+     feat:["2500 Robux","Выдача на аккаунт","Мгновенно на ник"],
+     desc:"Выгодный пакет для подписок и пропусков."},
+    {id:"rb-gamepass", cat:"roblox", badge:"new", badgeT:"Ново", name:"Game Pass", price:149, period:"Моментально",
+     feat:["Пропуск на выбор","Подбор под вашу игру"],
+     desc:"Открой платный гейм-пасс в популярных играх."},
+    {id:"cs-case", cat:"cs", name:"Набор кейсов 10", price:449, period:"Моментально",
+     feat:["10 ключей","Редкие скины","Инвентарь Steam"],
+     desc:"Набор ключей и кейсов для коллекционеров."},
+    {id:"cs-knife", cat:"cs", badge:"top", badgeT:"Топ", name:"Нож для инвентаря", price:1299, period:"Моментально",
+     feat:["Скин-нож на выбор","Бонус 200 кредитов"],
+     desc:"Премиальный нож, который выделит инвентарь."},
+    {id:"vip-1", cat:"vip", badge:"hot", badgeT:"Хит", name:"VIP Сервер", price:199, period:"Навсегда",
+     feat:["Роль VIP в Discord","Бонус к опыту","Закрытый чат"],
+     desc:"Привилегия сразу в нескольких играх и Discord."},
+    {id:"vip-2", cat:"vip", badge:"new", badgeT:"Ново", name:"Суперпакет", price:1990, period:"Навсегда",
+     feat:["VIP во всех играх","Годовой кейс","Золотой префикс"],
+     desc:"Максимум бонусов сразу для всех проектов."}
+  ];
+
+  // ---- state ----
+  var cart = safeParse("bs_cart", {});
+  var favs = safeParse("bs_favs", []);
+  var orders = safeParse("bs_orders", []);
+  var nick = safeGet("bs_nick", "");
+  var server = safeGet("bs_server", "");
+  var email = safeGet("bs_email", "");
+
+  var currentCat = "all";
+  var searchQ = "";
+  var drawerMode = "cart";
+
+  function safeGet(k,d){try{var v=localStorage.getItem(k);return v===null?d:v;}catch(e){return d;}}
+  function safeSet(k,v){try{localStorage.setItem(k,v);}catch(e){}}
+  function safeParse(k,d){try{var v=localStorage.getItem(k);return v?JSON.parse(v):d;}catch(e){return d;}}
+  function saveKey(k,v){try{localStorage.setItem(k,JSON.stringify(v));}catch(e){}}
+
+  // ---- helpers ----
+  function esc(s){return String(s).replace(/[&<>"']/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c];});}
+  function money(n){return (Number(n)||0).toLocaleString("ru-RU") + " ₽";}
+  function catInfo(id){return CAT_DEFS[id]||{label:id,color:"#6c8cff",icon:""};}
+  function findPkg(id){return PACKAGES.filter(function(p){return p.id===id;})[0];}
+  function cartCount(){return Object.keys(cart).reduce(function(s,k){return s+cart[k];},0);}
+  function cartTotal(){return PACKAGES.reduce(function(s,p){return s+(cart[p.id]?cart[p.id]*p.price:0);},0);}
+
+  // ---- catalog render ----
+  function visibleList(){
+    var list = currentCat==="all" ? PACKAGES.slice() : PACKAGES.filter(function(p){return p.cat===currentCat;});
+    if(searchQ){
+      var q = searchQ.toLowerCase();
+      var catLabel = list.map ? null : null;
+      list = list.filter(function(p){
+        var cat = catInfo(p.cat).label.toLowerCase();
+        return p.name.toLowerCase().indexOf(q)>=0 ||
+               p.desc.toLowerCase().indexOf(q)>=0 ||
+               p.feat.join(" ").toLowerCase().indexOf(q)>=0 ||
+               cat.indexOf(q)>=0;
+      });
+    }
+    return list;
+  }
+
+  function cardHTML(p){
+    var t = p.badge ? '<span class="tag2 tag-'+p.badge+'">'+esc(p.badgeT)+'</span>':'';
+    var c = catInfo(p.cat);
+    var feats = p.feat.map(function(f){return '<span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>'+esc(f)+'</span>';}).join("");
+    var period = p.period ? '<small> / '+esc(p.period)+'</small>' : '';
+    var favOn = favs.indexOf(p.id)>=0 ? ' on' : '';
+    var extra = p.cat==="vip" ? ' alt' : '';
+    return '<article class="card'+extra+'" data-id="'+p.id+'">'+t+
+      '<button class="fav'+favOn+'" data-fav="'+p.id+'" aria-label="'+(favOn?'Убрать':'Добавить')+' '+esc(p.name)+' из избранного" title="Избранное"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.6l-1-1a5.5 5.5 0 0 0-7.8 7.8l1 1L12 21.2l7.8-7.8 1-1a5.5 5.5 0 0 0 0-7.8z"/></svg></button>'+
+      '<div class="icon">'+c.icon+'</div>'+
+      '<h3>'+esc(p.name)+'</h3><p>'+esc(p.desc)+'</p>'+
+      '<div class="feat">'+feats+'</div>'+
+      '<div class="card-foot"><div class="price">'+money(p.price)+period+'</div>'+
+      '<button class="add" data-add="'+p.id+'" aria-label="Добавить '+esc(p.name)+' в корзину">В корзину</button></div></article>';
+  }
+
+  function renderCatalog(){
+    var grid = document.getElementById("grid");
+    var list = visibleList();
+    if(list.length===0){
+      grid.innerHTML = '<div class="empty" style="grid-column:1/-1;padding:60px 10px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg><p>Ничего не найдено.</p><p style="font-size:13px;margin-top:6px">Попробуй другой запрос или сними фильтр.</p></div>';
+    } else {
+      grid.innerHTML = list.map(cardHTML).join("");
+    }
+    updateCounts();
+  }
+
+  function updateCounts(){
+    document.getElementById("cAll").textContent = PACKAGES.length;
+    document.getElementById("cMc").textContent = PACKAGES.filter(function(p){return p.cat==="mc";}).length;
+    document.getElementById("cRoblox").textContent = PACKAGES.filter(function(p){return p.cat==="roblox";}).length;
+    document.getElementById("cCs").textContent = PACKAGES.filter(function(p){return p.cat==="cs";}).length;
+    document.getElementById("cVip").textContent = PACKAGES.filter(function(p){return p.cat==="vip";}).length;
+  }
+
+  // ---- tabs + search ----
+  var tabs = document.querySelectorAll("#tabs .tab");
+  tabs.forEach(function(tb){
+    tb.addEventListener("click",function(){
+      tabs.forEach(function(x){x.classList.remove("active");});
+      tb.classList.add("active");
+      currentCat = tb.dataset.cat;
+      renderCatalog();
+    });
+  });
+  var searchInput = document.getElementById("searchInput");
+  searchInput.addEventListener("input",function(){
+    searchQ = searchInput.value.trim();
+    renderCatalog();
+  });
+
+  // favorites toggle via delegation on grid
+  document.getElementById("grid").addEventListener("click",function(e){
+    var f = e.target.closest("[data-fav]");
+    if(f){ toggleFav(f.dataset.fav); return; }
+    var b = e.target.closest("[data-add]");
+    if(b) addToCart(b.dataset.add);
+  });
+
+  function toggleFav(id){
+    var i = favs.indexOf(id);
+    if(i>=0){ favs.splice(i,1); toast("Убрано из избранного", true); }
+    else { favs.push(id); toast("Добавлено в избранное"); }
+    saveKey("bs_favs", favs);
+    updateBadges();
+    renderCatalog();
+  }
+
+  // ---- cart ----
+  function addToCart(id){
+    cart[id] = cart[id]?cart[id]+1:1;
+    saveKey("bs_cart", cart);
+    updateBadges();
+    renderCart();
+    var p = findPkg(id);
+    toast(p.name+" добавлен в корзину");
+    flashAdd(id);
+  }
+  function flashAdd(id){
+    var btn = document.querySelector('.add[data-add="'+id+'"]');
+    if(!btn) return;
+    btn.textContent = "Добавлено ✓";
+    btn.classList.add("added");
+    setTimeout(function(){ if(btn){btn.textContent="В корзину";btn.classList.remove("added");} },1200);
+  }
+
+  function changeQty(id,delta){
+    cart[id] = (cart[id]||0)+delta;
+    if(cart[id]<=0) delete cart[id];
+    saveKey("bs_cart", cart);
+    updateBadges();
+    if(drawerMode==="cart") renderCartItems();
+    else refreshFavRender();
+  }
+
+  function renderCart(){
+    updateBadges();
+    renderCartItems();
+  }
+
+  function renderCartItems(){
+    var box = document.getElementById("drawerItems");
+    var keys = Object.keys(cart).filter(function(id){return findPkg(id);});
+    if(keys.length===0){
+      box.innerHTML = '<div class="empty"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg><p>В корзине пока пусто.</p><p style="font-size:13px;margin-top:6px">Выберите пакет из каталога.</p></div>';
+    } else {
+      box.innerHTML = keys.map(function(id){
+        var p = findPkg(id); var q = cart[id]; var c = catInfo(p.cat);
+        return '<div class="ci">'+
+          '<span class="c-icon">'+c.icon+'</span>'+
+          '<div class="c-mid"><div class="c-name">'+esc(p.name)+'</div><div class="c-sub">'+esc(c.label)+' · '+esc(p.period)+'</div>'+
+          '<div class="c-qty"><button data-dec="'+id+'" aria-label="Уменьшить количество">−</button><span class="q">'+q+'</span><button data-inc="'+id+'" aria-label="Увеличить количество">+</button></div></div>'+
+          '<div class="c-price">'+money(p.price*q)+'</div>'+
+          '<button class="c-del" data-del="'+id+'" aria-label="Удалить '+esc(p.name)+'"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m3 0v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/></svg></button></div>';
+      }).join("");
+    }
+    var n = cartCount();
+    document.getElementById("drawerFoot").style.display = n===0 && drawerMode==="cart" ? "block" : "block";
+    document.getElementById("drawerTotal").textContent = money(cartTotal());
+    var coe = document.getElementById("checkoutBtn");
+    coe.disabled = n===0;
+    document.getElementById("clearCart").style.display = (n>0 && drawerMode==="cart") ? "block" : "none";
+  }
+
+  function updateBadges(){
+    var cn = cartCount();
+    var cb = document.getElementById("cartBadge");
+    cb.textContent = cn; cb.classList.toggle("show", cn>0);
+    var fn = favs.length;
+    var fb = document.getElementById("favBadge");
+    fb.textContent = fn; fb.classList.toggle("show", fn>0);
+  }
+
+  // drawer toggle generic
+  function openDrawer(mode){
+    drawerMode = mode || "cart";
+    if(drawerMode==="fav"){
+      rerenderDrawerFav();
+    } else {
+      document.getElementById("drawerTitle").textContent = "Ваша корзина";
+      document.getElementById("checkoutBtn").style.display = "";
+      document.getElementById("drawerFoot").style.display = "";
+      renderCartItems();
+    }
+    document.getElementById("drawer").classList.add("open");
+    document.getElementById("overlay").classList.add("show");
+  }
+  function closeDrawer(){
+    document.getElementById("drawer").classList.remove("open");
+    document.getElementById("overlay").classList.remove("show");
+  }
+
+  function refreshFavRender(){
+    if(drawerMode==="fav"){
+      document.getElementById("drawerTitle").textContent = "Избранное";
+      document.getElementById("checkoutBtn").style.display = "none";
+      document.getElementById("drawerFoot").style.display = "none";
+      rerenderDrawerFav();
+    }
+  }
+  function rerenderDrawerFav(){
+    var box = document.getElementById("drawerItems");
+    var list = PACKAGES.filter(function(p){return favs.indexOf(p.id)>=0;});
+    if(list.length===0){
+      box.innerHTML = '<div class="empty"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.6l-1-1a5.5 5.5 0 0 0-7.8 7.8l1 1L12 21.2l7.8-7.8 1-1a5.5 5.5 0 0 0 0-7.8z"/></svg><p>Избранное пусто.</p><p style="font-size:13px;margin-top:6px">Нажимай на сердечко в каталоге.</p></div>';
+    } else {
+      box.innerHTML = list.map(function(p){
+        var c = catInfo(p.cat);
+        return '<div class="ci">'+
+          '<span class="c-icon">'+c.icon+'</span>'+
+          '<div class="c-mid"><div class="c-name">'+esc(p.name)+'</div><div class="c-sub">'+esc(c.label)+' · '+esc(p.period)+'</div></div>'+
+          '<div class="c-price">'+money(p.price)+'</div>'+
+          '<button class="c-del" data-del="'+p.id+'" aria-label="Убрать '+esc(p.name)+' из избранного"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.6l-1-1a5.5 5.5 0 0 0-7.8 7.8l1 1L12 21.2l7.8-7.8 1-1a5.5 5.5 0 0 0 0-7.8z"/></svg></button></div>';
+      }).join("");
+    }
+  }
+
+  // drawer events
+  document.getElementById("openCart").addEventListener("click",function(){openDrawer("cart");});
+  document.getElementById("openFav").addEventListener("click",function(){openDrawer("fav");});
+  document.getElementById("closeDrawer").addEventListener("click",closeDrawer);
+  document.getElementById("overlay").addEventListener("click",closeDrawer);
+
+  document.getElementById("drawerItems").addEventListener("click",function(e){
+    if(drawerMode==="fav"){
+      var fd = e.target.closest("[data-del]");
+      if(fd){ toggleFav(fd.dataset.del); renderCatalog(); return; }
+      return;
+    }
+    var target = e.target.closest("[data-inc],[data-dec],[data-del]");
+    if(!target) return;
+    var id = target.dataset.inc||target.dataset.dec||target.dataset.del;
+    if(id===undefined) return;
+    if(target.hasAttribute("data-inc")) changeQty(id,1);
+    else if(target.hasAttribute("data-dec")) changeQty(id,-1);
+    else { delete cart[id]; saveKey("bs_cart",cart); updateBadges(); renderCartItems(); }
+  });
+
+  document.getElementById("clearCart").addEventListener("click",function(){
+    cart = {}; saveKey("bs_cart",cart); updateBadges(); renderCartItems();
+    toast("Корзина очищена", true);
+  });
+
+  // ---- checkout ----
+  document.getElementById("checkoutBtn").addEventListener("click",function(){
+    if(cartCount()===0) return;
+    var s = '';
+    Object.keys(cart).forEach(function(id){
+      var p = findPkg(id); if(!p) return;
+      s += '<div class="summary-row"><span>'+esc(p.name)+' × '+cart[id]+'</span><span>'+money(p.price*cart[id])+'</span></div>';
+    });
+    s += '<div class="summary-row total"><span>Итого</span><span>'+money(cartTotal())+'</span></div>';
+    document.getElementById("checkoutSummary").innerHTML = s;
+    document.getElementById("fNick").value = nick;
+    document.getElementById("fServer").value = server;
+    document.getElementById("fEmail").value = email;
+    document.getElementById("orderDone").classList.add("hidden");
+    document.getElementById("checkoutForm").classList.remove("hidden");
+    closeDrawer();
+    openModal();
+  });
+
+  var formEls = {
+    nick: document.getElementById("fNick"),
+    server: document.getElementById("fServer"),
+    email: document.getElementById("fEmail"),
+    agree: document.getElementById("fAgree")
+  };
+  function validate(){
+    var ok = true;
+    var nickV = formEls.nick.value.trim();
+    var srvV = formEls.server.value.trim();
+    var emV = formEls.email.value.trim();
+    var fNick = formEls.nick.closest(".field"), fSrv=formEls.server.closest(".field"), fEm=formEls.email.closest(".field");
+    if(nickV.length<2){fNick.classList.add("invalid");ok=false;}else{fNick.classList.remove("invalid");}
+    if(!srvV){fSrv.classList.add("invalid");ok=false;}else{fSrv.classList.remove("invalid");}
+    var emOk = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(emV);
+    if(!emOk){fEm.classList.add("invalid");ok=false;}else{fEm.classList.remove("invalid");}
+    if(!formEls.agree.checked){ok=false; if(!document.getElementById("agreeErr")){var s=document.createElement("div");s.id="agreeErr";s.className="err";s.style.display="block";s.textContent="Нужно согласиться";formEls.agree.parentNode.appendChild(s);} }
+    return ok;
+  }
+  formEls.agree.addEventListener("change",function(){ var s=document.getElementById("agreeErr"); if(s) s.remove(); });
+  document.getElementById("confirmOrder").addEventListener("click",function(){
+    if(!validate()) return;
+    var nickV = formEls.nick.value.trim(), srvV=formEls.server.value.trim(), emV=formEls.email.value.trim();
+    saveKey("bs_nick", JSON.stringify(nickV)); saveKey("bs_server", JSON.stringify(srvV)); saveKey("bs_email", JSON.stringify(emV));
+    nick=nickV; server=srvV; email=emV;
+
+    var items = Object.keys(cart).filter(function(id){return findPkg(id);}).map(function(id){
+      var p=findPkg(id); return {id:p.id, name:p.name, cat:p.cat, qty:cart[id], price:p.price};
+    });
+    var total = cartTotal();
+    var order = {
+      id: "BS-" + Date.now().toString().slice(-6),
+      date: new Date().toISOString(),
+      nick: nickV, server: srvV, email: emV,
+      items: items, total: total,
+      status: "wait"
+    };
+    orders.unshift(order);
+    saveKey("bs_orders", orders);
+
+    cart = {}; saveKey("bs_cart", cart); updateBadges(); renderCartItems();
+
+    document.getElementById("doneId").textContent = order.id;
+    document.getElementById("checkoutForm").classList.add("hidden");
+    document.getElementById("orderDone").classList.remove("hidden");
+    renderOrders();
+  });
+  document.getElementById("doneBtn").addEventListener("click",closeModal);
+
+  // ---- modal ----
+  function openModal(){document.getElementById("modal").classList.add("show");}
+  function closeModal(){document.getElementById("modal").classList.remove("show");}
+  document.getElementById("modal").addEventListener("click",function(e){ if(e.target===this) closeModal(); });
+
+  // ---- orders ----
+  function renderOrders(){
+    var wrap = document.getElementById("ordersWrap");
+    if(orders.length===0){
+      wrap.innerHTML = '<div class="empty" style="border:1px solid var(--border);border-radius:16px;background:var(--surface)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3h18v18H3z"/><path d="M3 9h18M9 21V9"/></svg><p>Заказов пока нет.</p><p style="font-size:13px;margin-top:6px">Оформи первый заказ из корзины — и он появится здесь.</p></div>';
+    } else {
+      wrap.innerHTML = '<div class="orders-list">' + orders.map(function(o){
+        var stT = {wait:["Ожидает оплаты","st-wait"], done:["Выдан","st-done"], cancel:["Отменён","st-cancel"]}[o.status]||["Ожидает оплаты","st-wait"];
+        var itemsStr = o.items.map(function(it){return esc(it.name)+" × "+it.qty;}).join(", ");
+        var dl = new Date(o.date);
+        var dateStr = ("0"+dl.getDate()).slice(-2)+"."+("0"+(dl.getMonth()+1)).slice(-2)+"."+dl.getFullYear()+" "+("0"+dl.getHours()).slice(-2)+":"+("0"+dl.getMinutes()).slice(-2);
+        return '<div class="order">'+
+          '<div class="o-id">№' + esc(o.id) + '</div>'+
+          '<div class="o-meta"><div class="o-date">'+dateStr+'</div>'+
+          '<div class="o-items">'+itemsStr+'</div>'+
+          '<div style="font-size:12.5px;color:var(--muted);margin-top:2px">Ник: '+esc(o.nick)+' · '+esc(o.server)+'</div></div>'+
+          '<div class="o-total">'+money(o.total)+'</div>'+
+          '<span class="st '+stT[1]+'">'+stT[0]+'</span></div>';
+      }).join("") + '</div>';
+    }
+  }
+  document.getElementById("btnOrders").addEventListener("click",function(){ /* scroll handled by anchor */ });
+
+  // ---- toast ----
+  var toastTimer;
+  function toast(msg, neutral){
+    var t = document.getElementById("toast");
+    var ic = neutral
+      ? '<svg viewBox="0 0 24 24" fill="none" stroke="var(--muted)" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>'
+      : '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><path d="M22 4 12 14l-3-3"/></svg>';
+    t.innerHTML = ic + esc(msg);
+    t.classList.add("show");
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(function(){t.classList.remove("show");},2000);
+  }
+
+  // ---- mobile menu ----
+  var menuToggle = document.getElementById("menuToggle");
+  var navLinks = document.getElementById("navLinks");
+  menuToggle.addEventListener("click",function(){
+    var open = navLinks.classList.toggle("open");
+    menuToggle.setAttribute("aria-expanded",String(open));
+  });
+  navLinks.addEventListener("click",function(e){
+    if(e.target.tagName==="A") navLinks.classList.remove("open");
+  });
+
+  // ---- FAQ ----
+  document.querySelectorAll(".faq-item").forEach(function(item){
+    item.querySelector(".faq-q").addEventListener("click",function(){
+      var open = item.classList.contains("open");
+      document.querySelectorAll(".faq-item.open").forEach(function(o){
+        o.classList.remove("open");
+        var a=o.querySelector(".faq-a"); if(a) a.style.maxHeight="0";
+      });
+      if(!open){
+        item.classList.add("open");
+        var a = item.querySelector(".faq-a");
+        a.style.maxHeight = a.scrollHeight + "px";
+      }
+    });
+  });
+
+  // ---- reveal on scroll ----
+  if("IntersectionObserver" in window){
+    var revealObs = new IntersectionObserver(function(entries){
+      entries.forEach(function(en){ if(en.isIntersecting){en.target.classList.add("in"); revealObs.unobserve(en.target);} });
+    },{threshold:.12});
+    document.querySelectorAll(".reveal").forEach(function(el){revealObs.observe(el);});
+  } else {
+    document.querySelectorAll(".reveal").forEach(function(el){el.classList.add("in");});
+  }
+
+  // ---- keyboard ----
+  document.addEventListener("keydown",function(e){
+    if(e.key==="Escape"){ closeDrawer(); closeModal(); }
+  });
+
+  document.getElementById("year").textContent = new Date().getFullYear();
+
+  // init
+  updateBadges();
+  renderCartItems();
+  renderCatalog();
+  renderOrders();
+})();
+</script>
+</body>
+</html>
